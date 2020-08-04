@@ -1,9 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from selenium import webdriver
 
 
 class PuzzleCrawler:
-    def __init__(self):
-        puzzle_url = "https://www.nonograms.org/nonograms2/i/4374"
+    def __init__(self, puzzle_id: str):
+        puzzle_url = f"https://www.nonograms.org/nonograms2/i/{puzzle_id}"
         self._driver = webdriver.Chrome()
         self._driver.get(puzzle_url)
 
@@ -84,7 +87,7 @@ class PuzzleCrawler:
         for col in col_elements:
             temp = col.find_elements_by_xpath("./td")
             for i in range(len(temp)):
-                if temp[i].get_attribute("class") == "num":
+                if temp[i].get_attribute("class") != "num_empty":
                     bg_color = temp[i].value_of_css_property("background-color")
                     ans[i].append([int(temp[i].text), self._color_table[bg_color]])
         return ans
@@ -105,3 +108,9 @@ class PuzzleCrawler:
     @property
     def row_group(self) -> list:
         return self._row_group
+
+
+if __name__ == '__main__':
+    obj = PuzzleCrawler("26833")
+    [print(i) for i in obj.col_group]
+
