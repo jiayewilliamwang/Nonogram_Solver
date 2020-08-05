@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from selenium import webdriver
+from selenium.webdriver import ActionChains
 from bs4 import BeautifulSoup
+from time import sleep
 
 import re
 
@@ -13,6 +15,7 @@ class PuzzleCrawler:
 
         puzzle_url = f"https://www.nonograms.org/nonograms2/i/{puzzle_id}"
         self._driver = webdriver.Chrome()
+
         self._driver.get(puzzle_url)
 
         self._puzzle_grid = self._get_puzzle_grid()
@@ -24,6 +27,15 @@ class PuzzleCrawler:
         self._color_table = self._get_color_table()
         self._row_groups = self._get_row_groups()
         self._col_groups = self._get_col_groups()
+        self._color_panel = self._get_color_panel()
+
+    def change_color_panel(self, cur_color, goal_color):
+        click_count = (goal_color - cur_color) % (len(self._color_table) - 1)
+        for _ in range(click_count):
+            self._color_panel.click()
+
+    def _get_color_panel(self):
+        return self._driver.find_element_by_id("nmti")
 
     def _get_color_table(self) -> dict:
         """
@@ -53,7 +65,6 @@ class PuzzleCrawler:
         grid = []
         for row in puzzle_grid:
             grid.append(row.find_elements_by_tag_name("td"))
-        print(len(grid), len(grid[0]))
         return grid
 
     def _get_row_groups(self) -> list:
