@@ -2,23 +2,28 @@
 # -*- coding: utf-8 -*-
 
 from selenium import webdriver
+from bs4 import BeautifulSoup
+
+import re
 
 
 class PuzzleCrawler:
     def __init__(self, puzzle_id: str):
+        self._hex_color_pattern = re.compile("#(?:[0-9a-fA-F]{3}){2}")
+
         puzzle_url = f"https://www.nonograms.org/nonograms2/i/{puzzle_id}"
         self._driver = webdriver.Chrome()
         self._driver.get(puzzle_url)
 
-        # _row_ele contains both the horizontal block groups length and the grid
-        self._col_ele, self._row_ele = self._driver.find_elements_by_xpath(
-            '//*[@id="nonogram_table"]/tbody/tr')
-
         self._puzzle_grid = self._get_puzzle_grid()
-        self._color_table = self._get_color_table()
+        self._n = len(self._puzzle_grid)
+        self._m = len(self._puzzle_grid[0])
 
-        self._col_group = self._get_col_groups()
-        self._row_group = self._get_row_groups()
+        self._soup = BeautifulSoup(self._driver.page_source, "html.parser")
+
+        self._color_table = self._get_color_table()
+        self._row_groups = self._get_row_groups()
+        self._col_groups = self._get_col_groups()
 
     def _get_color_table(self) -> dict:
         """
@@ -27,13 +32,12 @@ class PuzzleCrawler:
         :return: {bg_color: i} where bg_color is in "rbga(r, g, b, a)" format.
         i is in range 0 to n, where n is number of colors, exclusive white.
         """
-        color_table_ele = self._driver.find_elements_by_xpath(
-            "//table[@class='nonogram_color_table']/tbody/tr/td")
-
-        color_table = {"rgba(255, 255, 255, 1)": 0}
-        for color in color_table_ele:
-            bg_color = color.value_of_css_property("background-color")
-            color_table[bg_color] = int(color.text)
+        color_table_element = self._soup.find("table", {
+            "class": "nonogram_color_table"})
+        colors = self._hex_color_pattern.findall(str(color_table_element))
+        color_table = {"#ffffff": 0}
+        for i in range(len(colors)):
+            color_table[colors[i]] = i + 1
         return color_table
 
     def _get_puzzle_grid(self) -> list:
@@ -44,14 +48,12 @@ class PuzzleCrawler:
         :return: list of lists of selenium elements, where size equals to
             _row. Each sub-list has same size equal to _col.
         """
-        puzzle_grid = self._row_ele.find_elements_by_xpath(
-            "./td[@class='nmtc']/table/tbody/tr")
+        puzzle_grid = self._driver.find_elements_by_xpath(
+            '//*[@id="nonogram_table"]/tbody/tr[2]/td[2]/table/tbody/tr')
         grid = []
         for row in puzzle_grid:
-            cur_row = []
-            for cell in row.find_elements_by_xpath("./td"):
-                cur_row.append(cell)
-            grid.append(cur_row)
+            grid.append(row.find_elements_by_tag_name("td"))
+        print(len(grid), len(grid[0]))
         return grid
 
     def _get_row_groups(self) -> list:
@@ -61,17 +63,17 @@ class PuzzleCrawler:
             be at least 1, represents the colored groups of each row. For each
             color group is in [length: int, color-reference: int] format.
         """
-        row_elements = self._row_ele.find_elements_by_xpath(
-            "./td[@class='nmtl']/table/tbody/tr")
-
-        ans = []
-        for row in row_elements:
+        row_groups = []
+        rows_element = self._soup.find("td", {"class": "nmtl"}).find_all("tr")
+        for row in rows_element:
             cur_row = []
-            for cell in row.find_elements_by_xpath("./td[@class='num']"):
-                bg_color = cell.value_of_css_property("background-color")
-                cur_row.append([int(cell.text), self._color_table[bg_color]])
-            ans.append(cur_row)
-        return ans
+            for col in row.find_all("td"):
+                if col.has_attr("style"):
+                    color = self._hex_color_pattern.findall(col["style"])[0]
+                    pair = [int(col.get_text()), self._color_table[color]]
+                    cur_row.append(pair)
+            row_groups.append(cur_row)
+        return row_groups
 
     def _get_col_groups(self) -> list:
         """
@@ -80,17 +82,16 @@ class PuzzleCrawler:
             be at least 1, represents the colored groups of each col. For each
             color group is in [length: int, color-reference: int] format.
         """
-        col_elements = self._col_ele.find_elements_by_xpath(
-            "./td[@class='nmtt']/table/tbody/tr")
-
-        ans = [[] for _ in range(len(self._puzzle_grid[0]))]
-        for col in col_elements:
-            temp = col.find_elements_by_xpath("./td")
-            for i in range(len(temp)):
-                if temp[i].get_attribute("class") != "num_empty":
-                    bg_color = temp[i].value_of_css_property("background-color")
-                    ans[i].append([int(temp[i].text), self._color_table[bg_color]])
-        return ans
+        col_groups = [[] for _ in range(self._m)]
+        cols_element = self._soup.find("td", {"class": "nmtt"}).find_all("tr")
+        for col in cols_element:
+            cur = col.find_all("td")
+            for i in range(len(cur)):
+                if cur[i].has_attr("style"):
+                    color = self._hex_color_pattern.findall(cur[i]["style"])[0]
+                    pair = [int(cur[i].get_text()), self._color_table[color]]
+                    col_groups[i].append(pair)
+        return col_groups
 
     # ----- Getters -----
     @property
@@ -102,15 +103,9 @@ class PuzzleCrawler:
         return self._color_table
 
     @property
-    def col_group(self) -> list:
-        return self._col_group
+    def col_groups(self) -> list:
+        return self._col_groups
 
     @property
-    def row_group(self) -> list:
-        return self._row_group
-
-
-if __name__ == '__main__':
-    obj = PuzzleCrawler("26833")
-    [print(i) for i in obj.col_group]
-
+    def row_groups(self) -> list:
+        return self._row_groups
