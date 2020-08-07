@@ -29,10 +29,6 @@ class PuzzleCrawler:
         self._col_groups = self._get_col_groups()
         self._color_panel = self._get_color_panel()
 
-    def change_color_panel(self, cur_color, goal_color):
-        click_count = (goal_color - cur_color) % (len(self._color_table) - 1)
-        for _ in range(click_count):
-            self._color_panel.click()
 
     def _get_color_panel(self):
         return self._driver.find_element_by_id("nmti")
@@ -120,3 +116,7 @@ class PuzzleCrawler:
     @property
     def row_groups(self) -> list:
         return self._row_groups
+
+    @property
+    def color_panel(self):
+        return self._color_panel
