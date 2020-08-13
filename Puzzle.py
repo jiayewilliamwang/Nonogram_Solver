@@ -1,5 +1,5 @@
-from src.OneLineSolver import OneLineSolver
-from src.PuzzleCrawler import PuzzleCrawler
+from OneLineSolver import OneLineSolver
+from PuzzleCrawler import PuzzleCrawler
 from selenium.webdriver.support.color import Color
 
 import math
@@ -35,7 +35,7 @@ class Puzzle:
 
         prev_sum = float("inf")
         while True:
-            self._paint(self._row_masks, painted)
+            # self._paint(self._row_masks, painted)
             if not self._update_state(self._solver, dead_rows, dead_cols):
                 print("Can't update the puzzle state")
                 return False

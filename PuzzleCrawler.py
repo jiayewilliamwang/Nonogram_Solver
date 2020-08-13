@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from selenium import webdriver
-from selenium.webdriver import ActionChains
 from bs4 import BeautifulSoup
-from time import sleep
 
 import re
 
