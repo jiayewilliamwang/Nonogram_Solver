@@ -15,6 +15,10 @@ I am not the creator of the solving algorithm. Very appreciate this article:
 that I found during the pre-project stage. This is most straightforward way to 
 achieve my goal among all other articles I searched.  
 
+Due to Selenium will be relevantly slow when dealing with large amount of 
+automation, the displaying-progress is slow with large puzzle (about 60+). This
+has nothing to do with the algorithm. 
+
 ## Prerequisites
 
 - [Python3.6+](https://www.python.org/downloads/)
@@ -37,3 +41,4 @@ pip install argparse
 - Complete the Usage section
 - Add black-white puzzle features
 - Fancy the commandline arguments. 
+- Fix Selenium click() is not fast enough to response the web page update. 
