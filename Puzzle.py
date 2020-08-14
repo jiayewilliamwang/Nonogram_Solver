@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
 from OneLineSolver import OneLineSolver
 from PuzzleCrawler import PuzzleCrawler
 from selenium.webdriver.support.color import Color

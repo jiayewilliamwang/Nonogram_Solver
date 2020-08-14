@@ -27,17 +27,10 @@ class PuzzleCrawler:
         self._col_groups = self._get_col_groups()
         self._color_panel = self._get_color_panel()
 
-
     def _get_color_panel(self):
         return self._driver.find_element_by_id("nmti")
 
     def _get_color_table(self) -> dict:
-        """
-        Get the color table of the puzzle.
-        Add color white and value 0 as default.
-        :return: {bg_color: i} where bg_color is in "rbga(r, g, b, a)" format.
-        i is in range 0 to n, where n is number of colors, exclusive white.
-        """
         color_table_element = self._soup.find("table", {
             "class": "nonogram_color_table"})
         colors = self._hex_color_pattern.findall(str(color_table_element))
@@ -47,13 +40,6 @@ class PuzzleCrawler:
         return color_table
 
     def _get_puzzle_grid(self) -> list:
-        """
-        Get the grid of the puzzle. It is going to be modified and
-        synchronized when solving the puzzle. Moreover, visualize the solving
-        progress
-        :return: list of lists of selenium elements, where size equals to
-            _row. Each sub-list has same size equal to _col.
-        """
         puzzle_grid = self._driver.find_elements_by_xpath(
             '//*[@id="nonogram_table"]/tbody/tr[2]/td[2]/table/tbody/tr')
         grid = []
@@ -62,12 +48,6 @@ class PuzzleCrawler:
         return grid
 
     def _get_row_groups(self) -> list:
-        """
-        Get the horizontal colored groups.
-        :return: list of lists of pair of integers. Each sublist's length will
-            be at least 1, represents the colored groups of each row. For each
-            color group is in [length: int, color-reference: int] format.
-        """
         row_groups = []
         rows_element = self._soup.find("td", {"class": "nmtl"}).find_all("tr")
         for row in rows_element:
@@ -81,12 +61,6 @@ class PuzzleCrawler:
         return row_groups
 
     def _get_col_groups(self) -> list:
-        """
-        Get the vertical colored groups.
-        :return: list of lists of pair of integers. Each sublist's length will
-            be at least 1, represents the colored groups of each col. For each
-            color group is in [length: int, color-reference: int] format.
-        """
         col_groups = [[] for _ in range(self._m)]
         cols_element = self._soup.find("td", {"class": "nmtt"}).find_all("tr")
         for col in cols_element:
